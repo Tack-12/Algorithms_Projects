@@ -1,22 +1,9 @@
-#!/usr/bin/env python3
-"""
-rsa_menu.py
-
-A menu-driven RSA prototype matching the sample I/O required for the project.
-- Generates RSA keys on startup and prints "RSA keys have been generated."
-- Public user: send encrypted message, authenticate digital signature
-- Owner: decrypt messages, sign messages, show keys, generate new keys
-Notes:
-- This is an educational prototype (no secure padding or hashing).
-- Decrypted messages are displayed uppercase to match sample I/O.
-"""
 
 import secrets
 import math
 import sys
 
-# ------------------ Primality (Miller-Rabin) ------------------
-
+#probable_prime
 def is_probable_prime(n: int, k: int = 16) -> bool:
     if n < 2:
         return False
@@ -24,7 +11,6 @@ def is_probable_prime(n: int, k: int = 16) -> bool:
     for p in small_primes:
         if n % p == 0:
             return n == p
-    # write n-1 as 2^r * d
     d = n - 1
     r = 0
     while d % 2 == 0:
@@ -51,7 +37,6 @@ def generate_prime(bits: int) -> int:
         if is_probable_prime(cand):
             return cand
 
-# ------------------ Extended Euclid / modinv ------------------
 
 def egcd(a: int, b: int):
     if b == 0:
@@ -66,10 +51,8 @@ def modinv(a: int, m: int) -> int:
         raise ValueError("modular inverse does not exist")
     return x % m
 
-# ------------------ Key gen / encrypt / decrypt / sign / verify ------------------
 
 def generate_keypair(prime_bits: int = 256):
-    # produce p and q of prime_bits each (n ~ 2 * prime_bits)
     p = generate_prime(prime_bits)
     q = generate_prime(prime_bits)
     while q == p:
@@ -127,18 +110,17 @@ def verify_text(message: str, signature_int: int, pubkey):
     v = pow(signature_int, e, n)
     return v == m
 
-# ------------------ Application state ------------------
+# Phases of the app
 
-# Start with generating keys
+# Generating keys
 PUBLIC_KEY, PRIVATE_KEY = generate_keypair(256)  # primes of 256 bits -> n ~ 512 bits
 print("RSA keys have been generated.")
 
-# In-memory storage for session
-# messages: list of ciphertext integers
-MESSAGES = []        # as sent by public users (ciphertexts)
-SIGNATURES = []      # list of tuples (message_text, signature_int) produced by owner
+#array to store the message and signatures
+MESSAGES = []        
+SIGNATURES = []      # list of tuples 
 
-# ------------------ Menus ------------------
+# main app
 
 def main_menu():
     while True:
@@ -157,6 +139,7 @@ def main_menu():
         else:
             print("Invalid choice. Try again.")
 
+#user  app
 def public_user_menu():
     while True:
         print("As a public user, what would you like to do?")
@@ -197,6 +180,7 @@ def public_user_menu():
         else:
             print("Invalid choice. Try again.")
 
+
 def owner_menu():
     global PUBLIC_KEY, PRIVATE_KEY, MESSAGES, SIGNATURES
     while True:
@@ -213,14 +197,12 @@ def owner_menu():
                 continue
             print("The following messages are available:")
             for i, c in enumerate(MESSAGES, start=1):
-                # we show length of original message bytes by decrypting temporarily but sample lists length only
-                # to match sample precisely show (length = X) where X is length in characters after decoding attempt
+                
                 try:
                     decrypted = decrypt_cipher_to_text(c, PRIVATE_KEY)
                     length = len(decrypted)
                 except Exception:
-                    # if decrypt fails to decode, we still show byte-length guess
-                    # decode safe: convert to bytes
+                    
                     try:
                         m_int = pow(c, PRIVATE_KEY[1], PRIVATE_KEY[0])
                         b = m_int.to_bytes((m_int.bit_length() + 7)//8 or 1, 'big')
@@ -268,8 +250,7 @@ def owner_menu():
         else:
             print("Invalid choice. Try again.")
 
-# ------------------ Program Entry ------------------
-
+#Starting point
 def main():
     try:
         main_menu()
