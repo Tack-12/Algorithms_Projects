@@ -1,2 +1,1 @@
-# RSA_Python
-Creates an RSA python encryption  chat.
+The Repository Consists of codes for class CSCI Algorithms ,
